@@ -5,13 +5,58 @@
   vars:
     ansible_become_pass: "{{ sudo_password }}"
     contact: wesleyj@iastate.edu
+    github_runner_dir: ./github-actions-runner
+    github_runner_token: "{{ github_runner_token }}"
+    github_runner_user: vm-user
   hosts: docker
   tasks:
     - name: Install Podman & Components
       package:
-        name: 
+        name:
           - podman
           - podman-compose
           - podman-docker
         state: latest
       become: true
+
+    - name: Create Directories for GitHub Actions Runner
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ github_runner_dir }}"
+        - kafka-types
+
+    - name: Install GitHub Actions Runner
+      unarchive:
+        src: https://github.com/actions/runner/releases/download/v2.314.1/actions-runner-linux-x64-2.314.1.tar.gz
+        dest: "{{ github_runner_dir }}"
+        creates: "{{ github_runner_dir }}/run.sh"
+        remote_src: yes
+
+    - name: Configure GitHub Actions Runner
+      command: > 
+        {{ github_runner_dir }}/config.sh \
+          --unattended \
+          --url https://github.com/iamwpj/kafka-types \
+          --token {{ github_runner_token }} \
+          --name kafka-types \
+          --work ~/kafka-types \
+          --runasservice
+      args:
+        creates: "{{ github_runner_dir }}/.env"
+  
+    - name: Create GitHub Actions Runner Service
+      command: > 
+        sudo {{ github_runner_dir }}/svc.sh install {{ github_runner_user }} \
+        && sudo chcon system_u:object_r:usr_t:s0 runsvc.sh
+      args:
+        creates: /etc/systemd/system/actions.runner.iamwpj-kafka-types.kafka-types.service
+    
+    - name: Start GitHub Actions Runner Service
+      service:
+        name: actions.runner.iamwpj-kafka-types.kafka-types.service
+        state: started
+        enabled: true
+      become: true
+      
