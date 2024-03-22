@@ -1,0 +1,17 @@
+---
+- name: Testing Compatibility
+  vars_files:
+    - secure.yaml
+  vars:
+    ansible_become_pass: "{{ sudo_password }}"
+    contact: wesleyj@iastate.edu
+  hosts: docker
+  tasks:
+    - name: Install Podman & Components
+      package:
+        name: 
+          - podman
+          - podman-compose
+          - podman-docker
+        state: latest
+      become: true
