@@ -8,5 +8,4 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      - run: echo -e "$(pwd)"
-      - run: docker compose -f kafka-types/compose.yaml
+      - run: podman-compose
