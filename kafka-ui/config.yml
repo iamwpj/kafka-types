@@ -1,0 +1,6 @@
+auth:
+  type: LOGIN_FORM
+kafka:
+  clusters:
+    - bootstrapServers: kafka-0:9092,kafka-1:9092
+      name: kafka

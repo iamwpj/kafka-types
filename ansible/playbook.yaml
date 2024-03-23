@@ -26,6 +26,7 @@
       loop:
         - "{{ github_runner_dir }}"
         - kafka-types
+        - kafka-types/kui
 
     - name: Install GitHub Actions Runner
       unarchive:
