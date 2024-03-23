@@ -1,3 +1,4 @@
+.vscode/
 .venv/
 .vault*
 secure.yaml
