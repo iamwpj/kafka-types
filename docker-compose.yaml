@@ -45,10 +45,11 @@ services:
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest
-    volumes:
-      - ./kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml
     environment:
       DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-0:9092,kafka-1:9092"
+
     depends_on:
       - kafka-0
       - kafka-1
