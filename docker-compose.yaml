@@ -4,6 +4,6 @@ services:
     image: "zookeeper:latest"
     restart: always
     hostname: zoo
-    ports: [ 2181:2181 ]
+    ports: [ "2181:2181" ]
     environment:
       ZOO_MY_ID: 1
