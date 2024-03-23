@@ -1,5 +1,5 @@
 x-general-kafka: &general-kafka
-  image: ubuntu/kafka
+  image: bitnami/kafka:latest
   ports: 
   - "9092"
   networks:
@@ -67,4 +67,3 @@ services:
 
 networks:
   kafka-net:
-    driver: bridge
