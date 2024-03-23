@@ -13,8 +13,6 @@ x-general-kafka: &general-kafka
   restart: unless-stopped
 
 x-general-kafka-env: &general-kafka-env
-  ZOOKEEPER_HOST: zoo
-  ZOOKEEPER_PORT: 2181
   ALLOW_PLAINTEXT_LISTENER: 'yes'
   KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
   EXTRA_ARGS: "-Xms128m -Xmx256m"
@@ -27,16 +25,16 @@ x-general-kafka-env: &general-kafka-env
 
 services:
 
-  zookeeper:
-    container_name: zookeeper-server
-    image: "zookeeper:latest"
-    restart: always
-    hostname: zoo
-    ports: [ "2181:2181" ]
-    networks:
-      - kafka-net
-    environment:
-      ZOO_MY_ID: 1
+  # zookeeper:
+  #   container_name: zookeeper-server
+  #   image: "zookeeper:latest"
+  #   restart: always
+  #   hostname: zoo
+  #   ports: [ "2181:2181" ]
+  #   networks:
+  #     - kafka-net
+  #   environment:
+  #     ZOO_MY_ID: 1
 
   kafka-0:
     <<: *general-kafka
