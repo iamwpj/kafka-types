@@ -3,13 +3,10 @@ run-name: self-hosted
 on:
   push:
     branches: [main]
-defaults:
-  run:
-    shell: bash
-    working-directory: $HOME/kafka-types
 jobs:
   Run-Docker-Compose:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose -f compose.yaml
+      - run: echo -e "$(pwd)"
+      - run: docker compose -f kafka-types/compose.yaml
