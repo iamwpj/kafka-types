@@ -1,9 +1,11 @@
-x-general-kafka: &general-kafka
-  image: bitnami/kafka:latest
-  ports: 
-  - "9092"
+version: '3.8'
+
+x-kafka-common: &kafka-common
+  image: 'bitnami/kafka:latest'
+  ports:
+    - "9092"
   networks:
-  - kafka-net
+    - kafka
   healthcheck:
     test: "bash -c 'printf \"\" > /dev/tcp/127.0.0.1/9092; exit $$?;'"
     interval: 5s
@@ -12,58 +14,60 @@ x-general-kafka: &general-kafka
     start_period: 30s
   restart: unless-stopped
 
-x-general-kafka-env: &general-kafka-env
+x-kafka-env-common: &kafka-env-common
   ALLOW_PLAINTEXT_LISTENER: 'yes'
   KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
-  EXTRA_ARGS: "-Xms128m -Xmx256m"
-  KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
   KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka-0:9093,1@kafka-1:9093
   KAFKA_KRAFT_CLUSTER_ID: kafka-types
   KAFKA_CFG_PROCESS_ROLES: controller,broker
   KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-  TZ: UTC
+  KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+  EXTRA_ARGS: "-Xms128m -Xmx256m"
 
 services:
 
-  # zookeeper:
-  #   container_name: zookeeper-server
-  #   image: "zookeeper:latest"
-  #   restart: always
-  #   hostname: zoo
-  #   ports: [ "2181:2181" ]
-  #   networks:
-  #     - kafka-net
-  #   environment:
-  #     ZOO_MY_ID: 1
-
   kafka-0:
-    <<: *general-kafka
-    container_name: kafka-0
-    hostname: kafka-0
+    <<: *kafka-common
     environment:
-      <<: *general-kafka-env
+      <<: *kafka-env-common
       KAFKA_CFG_NODE_ID: 0
-  kafka-1:
-    <<: *general-kafka
-    container_name: kafka-1
-    hostname: kafka-1
-    environment:
-      <<: *general-kafka-env
-      KAFKA_CFG_NODE_ID: 1
+    volumes:
+      - kafka_0_data:/bitnami/kafka
 
+  kafka-1:
+    <<: *kafka-common
+    environment:
+      <<: *kafka-env-common
+      KAFKA_CFG_NODE_ID: 1
+    volumes:
+      - kafka_1_data:/bitnami/kafka
+    
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest
-    ports: [ "8080:8080" ]
+    volumes:
+      - ./kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml
     environment:
       DYNAMIC_CONFIG_ENABLED: 'true'
     depends_on:
       - kafka-0
       - kafka-1
-    volumes:
-      - ./kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml
     networks:
-      - kafka-net
+      - kafka
+    ports:
+      - '8080:8080'
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider localhost:8080 || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 networks:
-  kafka-net:
+  kafka:
+
+volumes:
+  kafka_0_data:
+    driver: local
+  kafka_1_data:
+    driver: local
