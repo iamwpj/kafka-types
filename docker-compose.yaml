@@ -113,7 +113,6 @@ services:
     volumes:
       - ./metrics/grafana/provisioning:/etc/grafana/provisioning
       - ./metrics/grafana/dashboards:/var/lib/grafana/dashboards
-      - ./metrics/grafana/grafana.ini:/etc/grafana/grafana.ini
     networks:
       - kafka
     healthcheck:
