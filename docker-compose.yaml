@@ -33,7 +33,7 @@ services:
       KAFKA_CFG_NODE_ID: 0
     volumes:
       - kafka_0_data:/bitnami/kafka
-      - ./jmx-exporter:/opt/jmx-exporter
+      - ./metrics/jmx-exporter:/opt/jmx-exporter
 
   kafka-1:
     <<: *kafka-common
@@ -42,7 +42,7 @@ services:
       KAFKA_CFG_NODE_ID: 1
     volumes:
       - kafka_1_data:/bitnami/kafka
-      - ./jmx-exporter:/opt/jmx-exporter
+      - ./metrics/jmx-exporter:/opt/jmx-exporter
     
   kafka-ui:
     container_name: kafka-ui
@@ -74,7 +74,7 @@ services:
     ports:
       - 9090:9090
     volumes:
-      - ./prometheus:/etc/prometheus
+      - ./metrics/prometheus:/etc/prometheus
       - prom_data:/prometheus
     networks:
       - kafka  
@@ -111,8 +111,8 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=grafana
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./metrics/grafana/provisioning:/etc/grafana/provisioning
+      - ./metrics/grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - kafka
     healthcheck:
