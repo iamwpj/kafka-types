@@ -18,6 +18,8 @@
           - podman-docker
         state: latest
       become: true
+      tags: 
+        - docker-setup
 
     - name: Create Directories for GitHub Actions Runner
       file:
@@ -26,7 +28,8 @@
       loop:
         - "{{ github_runner_dir }}"
         - kafka-types
-        - kafka-types/kui
+      tags: 
+        - github-actions-runner
 
     - name: Install GitHub Actions Runner
       unarchive:
@@ -34,6 +37,8 @@
         dest: "{{ github_runner_dir }}"
         creates: "{{ github_runner_dir }}/run.sh"
         remote_src: yes
+      tags: 
+        - github-actions-runner
 
     - name: Configure GitHub Actions Runner
       command: > 
@@ -46,13 +51,17 @@
           --runasservice
       args:
         creates: "{{ github_runner_dir }}/.env"
-  
+      tags: 
+        - github-actions-runner
+
     - name: Create GitHub Actions Runner Service
       command: > 
         sudo {{ github_runner_dir }}/svc.sh install {{ github_runner_user }} \
         && sudo chcon system_u:object_r:usr_t:s0 runsvc.sh
       args:
         creates: /etc/systemd/system/actions.runner.iamwpj-kafka-types.kafka-types.service
+      tags: 
+        - github-actions-runner
     
     - name: Start GitHub Actions Runner Service
       service:
@@ -60,4 +69,5 @@
         state: started
         enabled: true
       become: true
-      
+      tags: 
+        - github-actions-runner

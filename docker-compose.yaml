@@ -14,6 +14,20 @@ x-kafka-common: &kafka-common
     start_period: 30s
   restart: unless-stopped
 
+x-kafka-common-exposed: &kafka-common-exposed
+  image: 'bitnami/kafka:latest'
+  ports:
+    - "9092:9092"
+  networks:
+    - kafka
+  healthcheck:
+    test: "bash -c 'printf \"\" > /dev/tcp/127.0.0.1/9092; exit $$?;'"
+    interval: 5s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+  restart: unless-stopped
+
 x-kafka-env-common: &kafka-env-common
   ALLOW_PLAINTEXT_LISTENER: 'yes'
   KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
@@ -44,17 +58,27 @@ services:
       - kafka_1_data:/bitnami/kafka
       - ./metrics/jmx-exporter:/opt/jmx-exporter
     
+  kafka-exposed:
+    <<: kafka-common-exposed
+    environment:
+      <<: *kafka-env-common
+      KAFKA_CFG_NODE_ID: 2
+    volumes:
+      - kafka_2_data:/bitnami/kafka
+      - ./metrics/jmx-exporter:/opt/jmx-exporter
+    
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest
     environment:
       DYNAMIC_CONFIG_ENABLED: 'true'
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-0:9092,kafka-1:9092"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-0:9092,kafka-1:9092,kafka-exposed:9092"
       KAFKA_CLUSTERS_0_METRICS_PORT: 9404
     depends_on:
       - kafka-0
       - kafka-1
+      - kafka-2
     networks:
       - kafka
     ports:
@@ -94,7 +118,7 @@ services:
         condition: service_healthy
     networks:
       - kafka
-    command: --kafka.server=kafka-0:9092 --kafka.server=kafka-1:9092
+    command: --kafka.server=kafka-0:9092 --kafka.server=kafka-1:9092 --kafka.server=kafka-exposed:9092
     healthcheck:
       test: "bash -c 'printf \"\" > /dev/tcp/127.0.0.1/9308; exit $$?;'"
       interval: 5s
@@ -122,15 +146,6 @@ services:
       retries: 3
       start_period: 10s
 
-  reverse-proxy:
-    image: traefik:latest
-    command: --api.insecure=true --providers.docker
-    ports: 
-      - '8000:80'
-      - '8080:8080'
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
 networks:
   kafka:
 
@@ -138,6 +153,8 @@ volumes:
   kafka_0_data:
     driver: local
   kafka_1_data:
+    driver: local
+  kafka_2_data:
     driver: local
   prom_data:
     driver: local

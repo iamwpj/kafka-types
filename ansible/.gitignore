@@ -1,0 +1,4 @@
+inventory.yaml
+ansible.cfg
+.vault_pass
+secure.yaml

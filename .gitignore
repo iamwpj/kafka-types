@@ -1,7 +1,2 @@
 .vscode/
 .venv/
-.vault*
-secure.yaml
-vars.yaml
-inventory.yaml
-ansible.cfg
