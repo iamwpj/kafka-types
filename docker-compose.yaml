@@ -1,54 +1,64 @@
 version: '3.8'
 
+x-kafka-common: &kafka-common
+  image: 'bitnami/kafka:latest'
+  healthcheck:
+    test: "bash -c 'printf \"\" > /dev/tcp/127.0.0.1/9092; exit $$?;'"
+    interval: 5s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+  restart: unless-stopped
+
+x-kafka-env-common: &kafka-env-common
+  ALLOW_PLAINTEXT_LISTENER: 'yes'
+  KAFKA_KRAFT_CLUSTER_ID: kafkatypes
+  KAFKA_CFG_PROCESS_ROLES: controller,broker
+  KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
+  KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+  KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+  KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  EXTRA_ARGS: "-Xms128m -Xmx256m -javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent-0.19.0.jar=9404:/opt/jmx-exporter/kafka-2_0_0.yml"
+
 services:
 
-  zookeeper:
-      image: confluentinc/cp-zookeeper:5.4.0
-      container_name: zookeeper
-      environment:
-        ZOOKEEPER_CLIENT_PORT: 2181
-        ZOOKEEPER_TICK_TIME: 2000
+  kafka-0:
+    <<: *kafka-common
+    ports:
+      - 8010:9092
+    environment:
+      <<: *kafka-env-common
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:8010
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:8010,EXTERNAL://localhost:8010
+      KAFKA_CFG_NODE_ID: 0
+    volumes:
+      - kafka_0_data:/bitnami/kafka
+      - ./metrics/jmx-exporter:/opt/jmx-exporter
 
   kafka-1:
-    image: confluentinc/cp-enterprise-kafka:5.4.0
-    container_name: kafka-1
-    depends_on:
-      - zookeeper
+    <<: *kafka-common
     ports:
-      - 9092:9092
+      - 8011:9092
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:39092,HOST://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:39092,HOST://localhost:9092
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
-      EXTRA_ARGS: "-Xms128m -Xmx256m -javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent-0.19.0.jar=9404:/opt/jmx-exporter/kafka-2_0_0.yml"
+      <<: *kafka-env-common
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:8011
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:8011,EXTERNAL://localhost:8011
+      KAFKA_CFG_NODE_ID: 1
     volumes:
-      - kafka_1_data:/var/lib/kafka/data
+      - kafka_1_data:/bitnami/kafka
       - ./metrics/jmx-exporter:/opt/jmx-exporter
 
   kafka-2:
-    image: confluentinc/cp-enterprise-kafka:5.4.0
-    container_name: kafka-2
-    depends_on:
-      - zookeeper
+    <<: *kafka-common
     ports:
-      - 19092:19092
+      - 8012:9092
     environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:49092,HOST://0.0.0.0:19092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:49092,HOST://localhost:19092
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
-      EXTRA_ARGS: "-Xms128m -Xmx256m -javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent-0.19.0.jar=9404:/opt/jmx-exporter/kafka-2_0_0.yml"
+      <<: *kafka-env-common
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:8012
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:8012,EXTERNAL://localhost:8012
+      KAFKA_CFG_NODE_ID: 2
     volumes:
-      - kafka_2_data:/var/lib/kafka/data
+      - kafka_2_data:/bitnami/kafka
       - ./metrics/jmx-exporter:/opt/jmx-exporter
 
   kafka-ui:
@@ -57,9 +67,10 @@ services:
     environment:
       DYNAMIC_CONFIG_ENABLED: 'true'
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-1:19092,kafka-2:29092"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "localhost:8010,localhost:8011,localhost:8012"
       KAFKA_CLUSTERS_0_METRICS_PORT: 9404
     depends_on:
+      - kafka-0
       - kafka-1
       - kafka-2
     ports:
@@ -95,7 +106,7 @@ services:
         condition: service_healthy
       kafka-1:
         condition: service_healthy
-    command: --kafka.server=kafka-0:9092 --kafka.server=kafka-1:9092 --kafka.server=kafka-2:9092
+    command: --kafka.server=localhost:8010 --kafka.server=localhost:8011 --kafka.server=localhost:8012
     healthcheck:
       test: "bash -c 'printf \"\" > /dev/tcp/127.0.0.1/9308; exit $$?;'"
       interval: 5s
