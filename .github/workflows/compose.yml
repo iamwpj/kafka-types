@@ -9,4 +9,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: podman-compose down
+      - run: podman network rm "kafka-types_kafka"
       - run: podman-compose up --detach --build
