@@ -32,7 +32,8 @@ x-kafka-common-exposed: &kafka-common-exposed
 x-kafka-env-common: &kafka-env-common
   ALLOW_PLAINTEXT_LISTENER: 'yes'
   KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
-  KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka-0:9093,1@kafka-1:9093
+  KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka-0:9093,1@kafka-1:9093,2@kafka-exposed:9093
+  KAFKA_CFG_PROCESS_ROLES: controller,broker
   KAFKA_KRAFT_CLUSTER_ID: kafkatypes
   KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
   KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
@@ -44,7 +45,6 @@ services:
     <<: *kafka-common
     environment:
       <<: *kafka-env-common
-      KAFKA_CFG_PROCESS_ROLES: controller,broker
       KAFKA_CFG_NODE_ID: 0
     volumes:
       - kafka_0_data:/bitnami/kafka
@@ -54,7 +54,6 @@ services:
     <<: *kafka-common
     environment:
       <<: *kafka-env-common
-      KAFKA_CFG_PROCESS_ROLES: controller,broker
       KAFKA_CFG_NODE_ID: 1
     volumes:
       - kafka_1_data:/bitnami/kafka
@@ -64,7 +63,6 @@ services:
     <<: *kafka-common-exposed
     environment:
       <<: *kafka-env-common
-      KAFKA_CFG_PROCESS_ROLES: broker
       KAFKA_CFG_NODE_ID: 2
     volumes:
       - kafka_2_data:/bitnami/kafka
