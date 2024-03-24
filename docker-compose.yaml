@@ -59,7 +59,7 @@ services:
       - ./metrics/jmx-exporter:/opt/jmx-exporter
     
   kafka-exposed:
-    <<: kafka-common-exposed
+    <<: *kafka-common-exposed
     environment:
       <<: *kafka-env-common
       KAFKA_CFG_NODE_ID: 2
