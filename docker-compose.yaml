@@ -122,6 +122,15 @@ services:
       retries: 3
       start_period: 10s
 
+  reverse-proxy:
+    image: traefik:latest
+    command: --api.insecure=true --providers.docker
+    ports: 
+      - '8000:80'
+      - '8080:8080'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
 networks:
   kafka:
 
