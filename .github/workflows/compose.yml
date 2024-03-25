@@ -2,6 +2,7 @@ name: Run Docker Compose
 run-name: self-hosted
 on:
   push:
+    paths: docker-compose.yaml
     branches: [main]
 jobs:
   Run-Docker-Compose:

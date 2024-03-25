@@ -9,6 +9,8 @@ x-kafka-common: &kafka-common
     retries: 3
     start_period: 30s
   restart: unless-stopped
+  networks:
+      - kafka
 
 x-kafka-env-common: &kafka-env-common
   ALLOW_PLAINTEXT_LISTENER: 'yes'
@@ -25,11 +27,12 @@ services:
   kafka-0:
     <<: *kafka-common
     ports:
-      - 8010:9092
+      - 9092
+      - 8010:8010
     environment:
       <<: *kafka-env-common
       KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:8010
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:8010,EXTERNAL://localhost:8010
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://:9092,EXTERNAL://localhost:8010
       KAFKA_CFG_NODE_ID: 0
     volumes:
       - kafka_0_data:/bitnami/kafka
@@ -38,11 +41,12 @@ services:
   kafka-1:
     <<: *kafka-common
     ports:
-      - 8011:9092
+      - 9092
+      - 8011:8011
     environment:
       <<: *kafka-env-common
       KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:8011
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:8011,EXTERNAL://localhost:8011
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://:9092,EXTERNAL://localhost:8011
       KAFKA_CFG_NODE_ID: 1
     volumes:
       - kafka_1_data:/bitnami/kafka
@@ -51,11 +55,12 @@ services:
   kafka-2:
     <<: *kafka-common
     ports:
-      - 8012:9092
+      - 9092
+      - 8012:8012
     environment:
       <<: *kafka-env-common
       KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:8012
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:8012,EXTERNAL://localhost:8012
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://:9092,EXTERNAL://localhost:8012
       KAFKA_CFG_NODE_ID: 2
     volumes:
       - kafka_2_data:/bitnami/kafka
@@ -67,7 +72,7 @@ services:
     environment:
       DYNAMIC_CONFIG_ENABLED: 'true'
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "localhost:8010,localhost:8011,localhost:8012"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-0:9092,kafka-1:9092,kafka-2:9092"
       KAFKA_CLUSTERS_0_METRICS_PORT: 9404
     depends_on:
       - kafka-0
@@ -81,6 +86,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    networks:
+      - kafka
 
   prometheus:
     image: prom/prometheus
@@ -106,13 +113,15 @@ services:
         condition: service_healthy
       kafka-1:
         condition: service_healthy
-    command: --kafka.server=localhost:8010 --kafka.server=localhost:8011 --kafka.server=localhost:8012
+    command: --kafka.server=kafka-0:9092 --kafka.server=kafka-1:9092 --kafka.server=kafka-2:9092
     healthcheck:
       test: "bash -c 'printf \"\" > /dev/tcp/127.0.0.1/9308; exit $$?;'"
       interval: 5s
       timeout: 10s
       retries: 3
       start_period: 5s
+    networks:
+      - kafka
 
   grafana:
     image: grafana/grafana
@@ -131,6 +140,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+networks:
+  kafka:
 
 volumes:
   kafka_0_data:
