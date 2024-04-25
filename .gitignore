@@ -5,3 +5,4 @@ running
 connect.sh
 test.*
 .DS_Store
+backups/
