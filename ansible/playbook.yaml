@@ -71,3 +71,12 @@
       become: true
       tags: 
         - github-actions-runner
+
+    - name: Install Python3.11
+      package:
+        name:
+          - python3.11
+        state: latest
+      become: true
+      tags:
+        - install-python
