@@ -9,6 +9,6 @@ jobs:
         runs-on: self-hosted
         steps:
             - uses: actions/checkout@v4
-            - run: test -d .venv || python3 -m venv .venv
+            - run: test -d .venv || python3.11 -m venv .venv
             - run: source .venv/bin/activate
             - run: pip install -r requirements.txt
