@@ -18,7 +18,7 @@
           - podman-docker
         state: latest
       become: true
-      tags: 
+      tags:
         - docker-setup
 
     - name: Create Directories for GitHub Actions Runner
@@ -28,7 +28,7 @@
       loop:
         - "{{ github_runner_dir }}"
         - kafka-types
-      tags: 
+      tags:
         - github-actions-runner
 
     - name: Install GitHub Actions Runner
@@ -37,11 +37,11 @@
         dest: "{{ github_runner_dir }}"
         creates: "{{ github_runner_dir }}/run.sh"
         remote_src: yes
-      tags: 
+      tags:
         - github-actions-runner
 
     - name: Configure GitHub Actions Runner
-      command: > 
+      command: >
         {{ github_runner_dir }}/config.sh \
           --unattended \
           --url https://github.com/iamwpj/kafka-types \
@@ -51,25 +51,25 @@
           --runasservice
       args:
         creates: "{{ github_runner_dir }}/.env"
-      tags: 
+      tags:
         - github-actions-runner
 
     - name: Create GitHub Actions Runner Service
-      command: > 
+      command: >
         sudo {{ github_runner_dir }}/svc.sh install {{ github_runner_user }} \
         && sudo chcon system_u:object_r:usr_t:s0 runsvc.sh
       args:
         creates: /etc/systemd/system/actions.runner.iamwpj-kafka-types.kafka-types.service
-      tags: 
+      tags:
         - github-actions-runner
-    
+
     - name: Start GitHub Actions Runner Service
       service:
         name: actions.runner.iamwpj-kafka-types.kafka-types.service
         state: started
         enabled: true
       become: true
-      tags: 
+      tags:
         - github-actions-runner
 
     - name: Install Python3.11
@@ -80,3 +80,31 @@
       become: true
       tags:
         - install-python
+    - name: Configure Environment
+      command: >
+        python3.11 -m venv $HOME/.venv
+      args:
+        creates: .venv
+      tags:
+        - install-python
+    - name: Set bashrc
+      lineinfile:
+        name: $HOME/.bashrc
+        line: "source .venv/bin/activate"
+        state: present
+      tags:
+        - install-python
+    - name: Install Python Packages
+      command: >
+        .venv/bin/pip install -r /home/vm-user/kafka-types/kafka-types/kafka-types/requirements.txt
+      tags:
+        - install-python
+
+    - name: "Miscellaneous Pacakges"
+      package:
+        name:
+          - parallel
+        state: latest
+        become: true
+        tags:
+          - misc-packages
