@@ -9,6 +9,6 @@ jobs:
         runs-on: self-hosted
         steps:
             - uses: actions/checkout@v4
-            - run: test "${GITHUB_WORKSPACE}"/.venv || python -m venv "${GITHUB_WORKSPACE}".venv
-            - run: source "${GITHUB_WORKSPACE}".venv/bin/activate
+            - run: test "${GITHUB_WORKSPACE}"/.venv || python -m venv "${GITHUB_WORKSPACE}"/.venv
+            - run: source "${GITHUB_WORKSPACE}"/.venv/bin/activate
             - run: pip install -r requirements.txt
