@@ -22,3 +22,4 @@ scrape_configs:
   - targets:
     - kafka-0:9404
     - kafka-1:9404
+    - kafka-2:9404

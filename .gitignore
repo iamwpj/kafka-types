@@ -6,3 +6,4 @@ connect.sh
 test.*
 .DS_Store
 backups/
+flog.sh
