@@ -12,7 +12,7 @@ try:
         buff += sys.stdin.read(1)
         if buff.endswith('\n'):
             result = producer.send(
-                topic="receiving", key=b"bltput", value=buff[:-1].encode()
+                topic="receiving", key=b"generic", value=buff[:-1].encode()
             )
             buff = ''
             k = k+1

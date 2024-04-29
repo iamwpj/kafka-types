@@ -1,4 +1,4 @@
-from kafka import KafkaConsumer,TopicPartition
+from kafka import KafkaConsumer
 from src.bootstrap_servers import bootstrap_servers
 from typing import List
 
@@ -9,13 +9,13 @@ class Consumer:
             **kwargs
         )
         self.consumer = consumer
+        
+    def topics(self) -> set:
+        return self.consumer.topics()
     
     def poll(self,**kwargs) -> dict:
         result = self.consumer.poll(**kwargs)
-        try:
-            return result
-        except TypeError:
-            return result
+        return result
 
     def subscribe(self,topics: List[str], **kwargs) -> set:
         self.consumer.subscribe(topics=topics,**kwargs)
@@ -24,6 +24,7 @@ class Consumer:
     def status(self) -> bool:
         result = self.consumer.bootstrap_connected()
         return result
-
+    
     def close(self, **kwargs) -> None:
         return self.consumer.close(**kwargs)
+    

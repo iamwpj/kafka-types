@@ -2,6 +2,7 @@ from src.producer import Producer
 from src.consumer import Consumer
 from src.grokker import Grokker
 from src.admin import Admin, NewTopic
+from src.schemas import Schema
 import config.config as c
 import json
 
@@ -57,28 +58,33 @@ def ouptut() -> str:
             msgbatch = consumer.poll(timeout_ms=1)
             if msgbatch:
                 for msgobj in msgbatch:
-                    [fixer(msg.value.decode("utf-8")) for msg in msgbatch[msgobj]]
-                    counter += len(msgbatch)
+                    counter += len(msgobj)
                     print(f"message count: {counter}")
+                    [fixer(msg.value.decode("utf-8")) for msg in msgbatch[msgobj]]
     except KeyboardInterrupt:
         consumer.close()
         pass
 
 
 # Fixer
-def fixer(msg: str, counter: int):
+def fixer(msg):
+    """Fixer
+    This receives unformatted logs from the source Kafka topic
+    and passes them to the groker -> applies schema -> and then
+    submits them to the destination Kafka topic.
+    """
+
+    # grok
     grok = Grokker()
     parsed = grok.default(msg)
-    key = grok.auto_schema_gen(data=parsed)
+    key, updated = grok.auto_schema_gen(data=parsed)
+    
+    # schema apply
+    schema = Schema(key)
+    bytes_data = schema.apply([updated])
     
     # Submit to desination topic
-    
-    producer.send(
-        topic=c.dest_topic,
-        value=json.dumps(msg)
-    )
-
-
+    producer.send(topic=c.dest_topic, value=bytes_data, key=key.encode())
 
 
 if __name__ == "__main__":

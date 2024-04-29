@@ -2,7 +2,7 @@ from src.consumer import Consumer
 import config.config as c
 
 consumer = Consumer(
-        group_id="remote-con-1", auto_offset_reset="earliest"
+        group_id="receiving", auto_offset_reset="earliest"
     )
 
 try:
