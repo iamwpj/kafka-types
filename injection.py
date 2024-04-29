@@ -24,7 +24,7 @@ def create_topic() -> bool:
 
     if not create:
         admin = Admin()
-        topics = [NewTopic(name=c.dest_topic, num_partitions=1, replication_factor=1)]
+        topics = [NewTopic(name=c.dest_topic, num_partitions=c.partition_count, replication_factor=1)]
 
         result = admin.create_topics(topics=[c.dest_topic, c.src_topic])
 
@@ -104,8 +104,8 @@ if __name__ == "__main__":
     consumer = Consumer(
         max_poll_records=10000,
         auto_offset_reset="earliest",
-        client_id="injection",
-        group_id=f"injection_group_{os.getpid()}",
+        client_id=f"injection_{os.getpid()}",
+        group_id="injection_group",
     )
     producer = Producer()
 
