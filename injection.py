@@ -6,6 +6,7 @@ from src.schemas import Schema
 import config.config as c
 import time
 
+
 # Create a new topic
 def create_topic() -> bool:
     """Create a destination topic -- only if not
@@ -98,11 +99,12 @@ def fixer(msg: str, grok, schema):
 
 
 if __name__ == "__main__":
-    
     # Build necessary objects
     consumer = Consumer(
         max_poll_records=10000,
         auto_offset_reset="earliest",
+        client_id="injection",
+        group_id="injection_group",
     )
     producer = Producer()
 
