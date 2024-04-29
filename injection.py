@@ -4,7 +4,7 @@ from src.grokker import Grokker
 from src.admin import Admin, NewTopic
 from src.schemas import Schema
 import config.config as c
-
+import time
 
 # Create a new topic
 def create_topic() -> bool:
@@ -55,12 +55,14 @@ def ouptut() -> str:
             msgbatch = consumer.poll(timeout_ms=1)
             if msgbatch:
                 for msgobj in msgbatch:
-                    counter += len(msgobj)
+                    counter += len(msgbatch[msgobj])
                     print(f"message batch count: {counter}")
+                    runtime = time.time()
                     [
                         fixer(msg.value.decode("utf-8"), grok, schema)
                         for msg in msgbatch[msgobj]
                     ]
+                    print(f"Batch time:\t\t{time.time()-runtime}")
     except KeyboardInterrupt:
         consumer.close()
         pass
@@ -77,27 +79,33 @@ def fixer(msg: str, grok, schema):
         grokker: This utility is pre-loaded to save time.
         schemer: This utility is pre-loaded to save time.
     """
-
+    # runtime = time.time()
     # grok
     parsed = grok.default(msg)
     key, updated = grok.auto_schema_gen(data=parsed)
+    # print(f"Grok time:\t\t{time.time()-runtime}")
 
     # schema apply
     if not key == c.common_key:
         schema = Schema(key)
 
     bytes_data = schema.apply([updated])
+    # print(f"Schema time:\t\t{time.time()-runtime}")
 
     # Submit to desination topic
     producer.send(topic=c.dest_topic, value=bytes_data, key=key.encode())
+    # print(f"Producer time:\t\t{time.time()-runtime}")
 
 
 if __name__ == "__main__":
+    
+    # Build necessary objects
     consumer = Consumer(
-        max_poll_records=100,
+        max_poll_records=10000,
         auto_offset_reset="earliest",
     )
     producer = Producer()
 
+    # Run functions
     create_topic()
     ouptut()
