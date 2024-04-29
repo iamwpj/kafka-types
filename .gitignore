@@ -8,3 +8,4 @@ test.*
 backups/
 flog.sh
 schemas/*.avsc
+! schemas/syslog_37cd36eefe8b3a12572f7e421f490d97.avsc

@@ -9,13 +9,17 @@ import re
 
 class Grokker:
     def __init__(self) -> None:
-        self.all_patterns = ("%{SYSLOGLINE}", "%{SYSLOG5424LINE}", "%{CATCHALL}")
+        self.all_patterns = (
+            "%{SYSLOGLINE}",
+            "%{SYSLOG5424LINE}",
+            ".*%{TIMESTAMP_ISO8601:timestamp}.%{SPACE}%{GREEDYDATA:message}",
+        )
 
     def default(self, data: str) -> dict:
         result = {}
 
         for pattern in self.all_patterns:
-            grok = Grok(pattern=pattern, custom_patterns_dir="./custom_patterns")
+            grok = Grok(pattern=pattern)
             result[pattern] = grok.match(data)
 
         # Return the "best" result.
@@ -51,7 +55,7 @@ class Grokker:
         # hash the list of key names. This will
         # ensure we only store one shema at a time.
 
-        name = f'syslog_{hashlib.md5("".join(sorted(list(data.keys()))).encode()).hexdigest()}'
+        name = f'{c.namespace}_{hashlib.md5("".join(sorted(list(data.keys()))).encode()).hexdigest()}'
 
         for i in data:
             field_name = i
@@ -71,7 +75,7 @@ class Grokker:
                 fields[0]["aliases"] = ["timestamp"]
 
             template = {
-                "namespace": "syslog",
+                "namespace": c.namespace,
                 "name": name,
                 "type": "record",
                 "fields": fields,

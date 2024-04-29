@@ -4,13 +4,6 @@ from src.grokker import Grokker
 from src.admin import Admin, NewTopic
 from src.schemas import Schema
 import config.config as c
-import json
-
-consumer = Consumer(
-    max_poll_records=100,
-    auto_offset_reset="earliest",
-)
-producer = Producer()
 
 
 # Create a new topic
@@ -55,38 +48,56 @@ def ouptut() -> str:
     try:
         consumer.subscribe([c.src_topic])
         while True:
+            # Build our env
+            grok = Grokker()
+            schema = Schema(c.common_key)
+
             msgbatch = consumer.poll(timeout_ms=1)
             if msgbatch:
                 for msgobj in msgbatch:
                     counter += len(msgobj)
-                    print(f"message count: {counter}")
-                    [fixer(msg.value.decode("utf-8")) for msg in msgbatch[msgobj]]
+                    print(f"message batch count: {counter}")
+                    [
+                        fixer(msg.value.decode("utf-8"), grok, schema)
+                        for msg in msgbatch[msgobj]
+                    ]
     except KeyboardInterrupt:
         consumer.close()
         pass
 
 
 # Fixer
-def fixer(msg):
-    """Fixer
-    This receives unformatted logs from the source Kafka topic
+def fixer(msg: str, grok, schema):
+    """This receives unformatted logs from the source Kafka topic
     and passes them to the groker -> applies schema -> and then
     submits them to the destination Kafka topic.
+
+    Args:
+        msg (str): The UTF8 text for encoding in Grok and Avro.
+        grokker: This utility is pre-loaded to save time.
+        schemer: This utility is pre-loaded to save time.
     """
 
     # grok
-    grok = Grokker()
     parsed = grok.default(msg)
     key, updated = grok.auto_schema_gen(data=parsed)
-    
+
     # schema apply
-    schema = Schema(key)
+    if not key == c.common_key:
+        schema = Schema(key)
+
     bytes_data = schema.apply([updated])
-    
+
     # Submit to desination topic
     producer.send(topic=c.dest_topic, value=bytes_data, key=key.encode())
 
 
 if __name__ == "__main__":
+    consumer = Consumer(
+        max_poll_records=100,
+        auto_offset_reset="earliest",
+    )
+    producer = Producer()
+
     create_topic()
     ouptut()
