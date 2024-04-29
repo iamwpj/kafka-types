@@ -1,0 +1,37 @@
+{
+    "namespace": "syslog",
+    "name": "syslog_37cd36eefe8b3a12572f7e421f490d97",
+    "type": "record",
+    "fields": [
+        {
+            "name": "timestamp",
+            "type": [
+                "string"
+            ]
+        },
+        {
+            "name": "logsource",
+            "type": [
+                "string"
+            ]
+        },
+        {
+            "name": "program",
+            "type": [
+                "string"
+            ]
+        },
+        {
+            "name": "pid",
+            "type": [
+                "int"
+            ]
+        },
+        {
+            "name": "message",
+            "type": [
+                "string"
+            ]
+        }
+    ]
+}
