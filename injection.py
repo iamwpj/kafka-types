@@ -5,6 +5,7 @@ from src.admin import Admin, NewTopic
 from src.schemas import Schema
 import config.config as c
 import time
+import os
 
 
 # Create a new topic
@@ -104,7 +105,7 @@ if __name__ == "__main__":
         max_poll_records=10000,
         auto_offset_reset="earliest",
         client_id="injection",
-        group_id="injection_group",
+        group_id=f"injection_group_{os.getpid()}",
     )
     producer = Producer()
 
