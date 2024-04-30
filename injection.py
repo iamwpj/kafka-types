@@ -9,33 +9,25 @@ import os
 
 
 # Create a new topic
-def create_topic() -> bool:
+def create_topic() -> None:
     """Create a destination topic -- only if not
     already exists.
 
-    Returns:
-        bool: Returns true if topics exist or are created.
-    """
+    Outputs:
+        Return from creating a new topic.
+    """            
 
     topics = consumer.topics()
-    create = [
-        True if topic in [c.dest_topic, c.src_topic] else False for topic in topics
-    ]
+    for topic in [c.dest_topic,c.src_topic]:
+        if topic not in topics:
+            admin = Admin()
+            create_topic = NewTopic(
+                name=topic, num_partitions=c.partition_count, replication_factor=1
+            )
 
-    if not create:
-        admin = Admin()
-        topics = [NewTopic(name=c.dest_topic, num_partitions=c.partition_count, replication_factor=1)]
+            result = admin.create_topics(topics=[create_topic])
 
-        result = admin.create_topics(topics=[c.dest_topic, c.src_topic])
-
-        if result.error_code == 0:
-            return True
-        else:
-            print(result.topic_errors)
-            return False
-
-    return True
-
+            print(result)
 
 # Catch new messages
 def ouptut() -> str:
@@ -102,9 +94,8 @@ def fixer(msg: str, grok, schema):
 if __name__ == "__main__":
     # Build necessary objects
     consumer = Consumer(
-        max_poll_records=10000,
+        max_poll_records=1000,
         auto_offset_reset="earliest",
-        client_id=f"injection_{os.getpid()}",
         group_id="injection_group",
     )
     producer = Producer()
