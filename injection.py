@@ -73,22 +73,24 @@ def fixer(msg: str, grok, schema):
         grokker: This utility is pre-loaded to save time.
         schemer: This utility is pre-loaded to save time.
     """
-    # runtime = time.time()
+    runtime = time.time()
     # grok
     parsed = grok.default(msg)
     key, updated = grok.auto_schema_gen(data=parsed)
-    # print(f"Grok time:\t\t{time.time()-runtime}")
+    print(f"Grok time:\t\t{time.time()-runtime}")
 
     # schema apply
+    runtime = time.time()
     if not key == c.common_key:
         schema = Schema(key)
 
     bytes_data = schema.apply([updated])
-    # print(f"Schema time:\t\t{time.time()-runtime}")
+    print(f"Schema time:\t\t{time.time()-runtime}")
 
     # Submit to desination topic
+    runtime = time.time()
     producer.send(topic=c.dest_topic, value=bytes_data, key=key.encode())
-    # print(f"Producer time:\t\t{time.time()-runtime}")
+    print(f"Producer time:\t\t{time.time()-runtime}")
 
 
 if __name__ == "__main__":

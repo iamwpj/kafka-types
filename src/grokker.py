@@ -61,7 +61,7 @@ class Grokker:
             field_name = i
             if data[i].isdigit():
                 field_type = ["int"]
-                # We will conver the data fields on the fly!
+                # We will convert the data fields on the fly!
                 data[i] = int(data[i])
             else:
                 field_type = ["string"]
