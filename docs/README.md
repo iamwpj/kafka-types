@@ -1,6 +1,4 @@
 # Docs
 
-![presentation](./presentation.mp4)
-
 * [Slides](./presentation.slides.html)
-
+* [presentation](../_src/presentation.mp4)
