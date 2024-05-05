@@ -19,3 +19,7 @@ I'm usng [flog](https://github.com/mingrammer/flog) to generate logs. I'm includ
 ## Does this work?
 
 Yep! It's slow, running at around 20%-25% of realtime. See [`stats.ipynb`](./stats/stats.ipynb) for some details.
+
+## Why?
+
+See details in [docs](./docs/).
